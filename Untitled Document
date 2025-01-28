@@ -1,0 +1,14 @@
+Rules to find candidate numbers:
+We are in a Region of Size N, filling empty spaces to a neighboring number would break that constraint -> not N in the neighbor.
+
+We have a number >1, only one neigboring empty square -> fill with the number.
+
+Solutions if almost full:
+Square counting: If not satisfied areas add up to the missing number, everything has to come from that.
+
+
+Procedure idea: 
+Guess a random number to empty.
+If the full field could be derived using one of the rules:
+empty space.
+Check if there are 2 solutions if removed
