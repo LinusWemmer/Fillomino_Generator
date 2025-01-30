@@ -7,10 +7,10 @@ def on_model(model):
     print(model)
 clingo.SymbolType
 
-def print_fillomino(fillomino_model, size: int):
+def print_fillomino(gen_model, size: int):
     #solved = open(file, "r")
     #fillomino_string = solved.read()
-    fillomino_list = fillomino_model
+    fillomino_list = gen_model
     fillomino = [[0 for _ in range(int(size))] for _ in range(int(size))]
     for item in fillomino_list:
         cell = item.arguments
@@ -23,12 +23,13 @@ def print_fillomino(fillomino_model, size: int):
 
 
 if __name__ == "__main__":
-    size = input("Size: ")
-    max_region = input("Maximum Region: ")
+    #size = input("Size: ")
+    #max_region = input("Maximum Region: ")
+    #For quicker testing for now:
+    size = 5
+    max_region = 5
     
     gen = Fillomino_Generator(size, max_region)
-    FillominoHandle = gen.generate_fillomino()
-    if FillominoHandle.get().satisfiable:
-        print_fillomino(FillominoHandle.model().symbols(shown=True), size)
-    else:
-        print("No solution found!")
+    gen_model = gen.generate_fillomino()
+    print_fillomino(gen_model, size)
+
