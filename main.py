@@ -5,33 +5,30 @@ from Fillomino_Generator import *
 
 def on_model(model):
     print(model)
+clingo.SymbolType
 
-
-def print_fillomino(fillomino_model: str):
+def print_fillomino(fillomino_model, size: int):
     #solved = open(file, "r")
     #fillomino_string = solved.read()
-    fillomino_list = fillomino_model.split(" ")[:-1]
-    fillomino = [[0 for _ in range(7)] for _ in range(7)]
+    fillomino_list = fillomino_model
+    fillomino = [[0 for _ in range(int(size))] for _ in range(int(size))]
     for item in fillomino_list:
-        f = re.findall(r"\(.|\s*\)", item)[0][1:-1].split(",")
-        f = [int(s) for s in f]
-        fillomino[f[0] -1][f[1] - 1] = f[2]
+        cell = item.arguments
+        #cell = re.findall(r"\(.*\)", item)[0][1:-1].split(",")
+        cell = [s.number for s in cell]
+        fillomino[cell[0] -1][cell[1] - 1] = cell[2]
     for row in fillomino:
         print(row)
     #solved.close()
 
 
-def generate_fillomino(max_region: int, width: int, ctl):
-    pass
-
-
 if __name__ == "__main__":
-    #length = input("Length: ")
-    #max_region = input("Maximum Region: ")
-    length = 1
-    max_region = 1
+    size = input("Size: ")
+    max_region = input("Maximum Region: ")
     
-    gen = Fillomino_Generator(length, max_region)
-    fillomino = gen.generate_fillomino()
-    print_fillomino(fillomino.model().symbols(terms=True))
-    print_fillomino()
+    gen = Fillomino_Generator(size, max_region)
+    FillominoHandle = gen.generate_fillomino()
+    if FillominoHandle.get().satisfiable:
+        print_fillomino(FillominoHandle.model().symbols(shown=True), size)
+    else:
+        print("No solution found!")

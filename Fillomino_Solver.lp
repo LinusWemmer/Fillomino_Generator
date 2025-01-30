@@ -1,5 +1,5 @@
-#const n=7.
-#const k=6.
+%#const n=7.
+%#const k=6.
 
 pos(R,C) :- R = 1..n, C = 1..n.
 
