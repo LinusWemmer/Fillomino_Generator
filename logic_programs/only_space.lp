@@ -47,6 +47,7 @@ only_cell :- only_cell(_,_,_).
 % TODO: what if the removal "breaks" a region in half/more pieces?
 
 #show remaining/3.
+#show removed/3.
 %#show removed_region_block/4.
 %#show derivable/3.
 %#show only_cell/3.

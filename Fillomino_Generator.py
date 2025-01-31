@@ -14,6 +14,8 @@ class Fillomino_Generator:
         self.solution_fillomino = None
         self.solution_program = ""
         self.current_program = ""
+        self.solution_steps = []
+
 
     def store_solution(self, model):
         self.solution_fillomino =  model.symbols(shown=True)
@@ -22,13 +24,17 @@ class Fillomino_Generator:
         self.current_program = self.solution_program
 
     def store_puzzle(self, model):
-        self.current_puzzle =  model.symbols(shown=True)
-        #TODO: remove only:
+        sym_seq =  model.symbols(shown=True)
+        self.current_puzzle = []
+        #print(self.current_puzzle)
+        #TODO: get the removed item from the puzzle
         self.current_program = ""
-        for atom in self.current_puzzle:
-            if not ("only_cell" in str(atom)):   #TODO: this is very inefficient + inelegenant(though tolearble complexity wise), remove this
+        for atom in sym_seq:
+            if atom.name == "removed":
+                self.solution_steps.append([s.number for s in atom.arguments])
+            else:
                 self.current_program += str(atom).replace("remaining", "fillomino") + ". "
-        print(self.current_program)
+                self.current_puzzle.append(atom)
         #for atom in self.solution_fillomino:
         #    self.solution_program += str(atom) + ". "
 
@@ -56,5 +62,7 @@ class Fillomino_Generator:
             self.ctl.add("base", ["n", "k"], one_step)
             self.ctl.ground([("base",[self.length, self.max_region])])
             if self.ctl.solve(on_model=self.store_puzzle).unsatisfiable:
-                satisfiable = False        
+                satisfiable = False  
+            step +=1
+        print(self.solution_steps)
         return self.current_puzzle

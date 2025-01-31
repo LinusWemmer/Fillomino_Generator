@@ -25,9 +25,9 @@ def print_fillomino(gen_model, size: int):
 if __name__ == "__main__":
     #size = input("Size: ")
     #max_region = input("Maximum Region: ")
-    # This works quite well for size up to 7
+    # This works quite reliably for size up to 7
     #For quicker testing for now:
-    size = 5
+    size = 6
     max_region = 5
     
     gen = Fillomino_Generator(size, max_region)
