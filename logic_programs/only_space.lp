@@ -1,5 +1,5 @@
-#const n=7.
-#const k=6.
+%#const n=7.
+%#const k=6.
 
 pos(R,C) :- R = 1..n, C = 1..n.
 % Assumption: We get a valid fillomino as input (a solvable one)
@@ -38,11 +38,16 @@ free_neighbor_count(R,C,N) :- removed_region(R,C,_), N = #count{R1,C1 : free_nei
 
 only_cell(R1,C1,N) :- removed(R1,C1,N), adjacent (R1,C1,R2,C2), free_neighbor_count(R2,C2,1).
 
+only_cell :- only_cell(_,_,_).
+
+:- not only_cell.
+
 %derivable(R,C,N) :- only_cell(R,C,N).
 % only one free neighbor next to region.
 % TODO: what if the removal "breaks" a region in half/more pieces?
 
-#show removed_region_block/4.
-#show derivable/3.
-#show only_cell/3.
-#show free_neighbor/4.
+#show remaining/3.
+%#show removed_region_block/4.
+%#show derivable/3.
+%#show only_cell/3.
+%#show free_neighbor/4.
