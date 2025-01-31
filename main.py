@@ -19,12 +19,13 @@ def print_fillomino(gen_model, size: int):
         fillomino[cell[0] -1][cell[1] - 1] = cell[2]
     for row in fillomino:
         print(row)
-    #solved.close()
+    print("")
 
 
 if __name__ == "__main__":
     #size = input("Size: ")
     #max_region = input("Maximum Region: ")
+    # This works quite well for size up to 7
     #For quicker testing for now:
     size = 5
     max_region = 5
@@ -32,4 +33,5 @@ if __name__ == "__main__":
     gen = Fillomino_Generator(size, max_region)
     gen_model = gen.generate_fillomino()
     print_fillomino(gen_model, size)
+    print_fillomino(gen.generate_puzzle(), size)
 
