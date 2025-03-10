@@ -25,7 +25,7 @@ if __name__ == "__main__":
     #max_region = input("Maximum Region: ")
     # This works quite reliably for size up to 7 (and works with 8)
     #For quicker testing for now:
-    size = 6
+    size = 7
     max_region = 5
     
     gen = Fillomino_Generator(size, max_region)

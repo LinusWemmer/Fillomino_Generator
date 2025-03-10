@@ -6,8 +6,9 @@ cell(R,C) :- R = 1..n, C = 1..n.
 1 {fillomino(R,C,1..k)} 1 :- cell(R,C).
 % achieved: A n×n grid is fillomino with random numbers from 1 to k.
 
-%:- not fillomino(_,_,k).
+:- not fillomino(_,_,k).
 %TODO: write small script to test if this actually improves performance --> 100 tries should be enough, just average them
+% ->  Results seem inconclusive so far
 
 connected(R1,C,R2,C) :- fillomino(R1,C,N), fillomino(R2,C,N), R2 = R1+1.
 connected(R,C1,R,C2) :- fillomino(R,C1,N), fillomino(R,C2,N), C2 = C1+1.

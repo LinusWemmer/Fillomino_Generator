@@ -29,11 +29,12 @@ class Fillomino_Generator:
         sym_seq =  model.symbols(shown=True)
         self.current_puzzle = []
         #print(self.current_puzzle)
-        #TODO: get the removed item from the puzzle
         self.current_program = ""
         for atom in sym_seq:
             if atom.name == "removed":
                 self.solution_steps.append([s.number for s in atom.arguments])
+            elif "blocked" in atom.name:
+                self.solution_steps.append("b")
             else:
                 self.current_program += str(atom).replace("remaining", "fillomino") + ". "
                 self.current_puzzle.append(atom)
@@ -55,7 +56,7 @@ class Fillomino_Generator:
         self.ctl.ground([("base", [self.length, self.max_region])])
         print("Grounded")
         statistics_list = []
-        for i in range (0,50):
+        for i in range (0,1000):
             self.ctl.solve()
             statistics_list.append(self.ctl.statistics["summary"]["times"]["total"])
         return statistics_list
@@ -71,10 +72,10 @@ class Fillomino_Generator:
             self.ctl = clingo.Control(arguments=["-t 8", "--stats"])
             self.ctl.add("base", [], self.current_program)
             self.ctl.ground([("base",[])])
-            solver = open("logic_programs/only_space.lp", "r")
-            one_step = solver.read()
+            solver = open("logic_programs/expand_area.lp", "r")
+            expand_area = solver.read()
             solver.close()
-            self.ctl.add("base", ["n", "k"], one_step)
+            self.ctl.add("base", ["n", "k"], expand_area)
             self.ctl.ground([("base",[self.length, self.max_region])])
             if self.ctl.solve(on_model=self.store_puzzle).unsatisfiable:
                 satisfiable = False  
