@@ -13,22 +13,31 @@ class Fillomino_Generator:
         self.gen = solver.read()
         solver.close()
 
+        # Solution of generated Puzzle
         self.solution_fillomino = None
         self.solution_program = ""
+
+        # The program string of the current 
         self.current_program = ""
+        # The model of the current iteration, as per the clingo api
+        self.current_puzzle = []
+
+        #Steps to get from the puzzle to the solution
         self.solution_steps = []
+        
 
 
     def store_solution(self, model):
         self.solution_fillomino =  model.symbols(shown=True)
+        solution_string = ""
         for atom in self.solution_fillomino:
-            self.solution_program += str(atom) + ". "
-        self.current_program = self.solution_program
+            solution_string += str(atom) + ". "
+        self.solution_program = solution_string
+        self.current_program = solution_string
 
     def store_puzzle(self, model):
         sym_seq =  model.symbols(shown=True)
         self.current_puzzle = []
-        #print(self.current_puzzle)
         self.current_program = ""
         for atom in sym_seq:
             if atom.name == "removed":
@@ -38,8 +47,6 @@ class Fillomino_Generator:
             else:
                 self.current_program += str(atom).replace("remaining", "fillomino") + ". "
                 self.current_puzzle.append(atom)
-        #for atom in self.solution_fillomino:
-        #    self.solution_program += str(atom) + ". "
 
     def generate_fillomino(self):
         # No randomization is needed; a different Fillomino is generated every time
@@ -67,14 +74,14 @@ class Fillomino_Generator:
         #Though this only constitutes a small part of the computation time
         satisfiable = True
         step = 1
+        solver = open("logic_programs/expand_area.lp", "r")
+        expand_area = solver.read()
+        solver.close()
         while satisfiable:
             print(step)
             self.ctl = clingo.Control(arguments=["-t 8", "--stats"])
             self.ctl.add("base", [], self.current_program)
             self.ctl.ground([("base",[])])
-            solver = open("logic_programs/expand_area.lp", "r")
-            expand_area = solver.read()
-            solver.close()
             self.ctl.add("base", ["n", "k"], expand_area)
             self.ctl.ground([("base",[self.length, self.max_region])])
             if self.ctl.solve(on_model=self.store_puzzle).unsatisfiable:
@@ -82,3 +89,36 @@ class Fillomino_Generator:
             step +=1
         print(self.solution_steps)
         return self.current_puzzle
+    
+    def generate_puzzle_maximize(self, n: int):
+        solver = open("logic_programs/expand_area.lp", "r")
+        expand_area = solver.read()
+        solver.close()
+        puzzle_steps = []
+        puzzle_list = []
+        for i in range(0,n):
+            self.solution_steps = []
+            satisfiable = True
+            self.current_program = self.solution_program
+            step = 1
+            while satisfiable:
+                print(step)
+                self.ctl = clingo.Control(arguments=["-t 8", "--stats"])
+                self.ctl.add("base", [], self.current_program)
+                self.ctl.ground([("base",[])])
+                
+                self.ctl.add("base", ["n", "k"], expand_area)
+                self.ctl.ground([("base",[self.length, self.max_region])])
+                if self.ctl.solve(on_model=self.store_puzzle).unsatisfiable:
+                    satisfiable = False  
+                    puzzle_steps.append(step)
+                    puzzle_list.append(self.current_puzzle)
+                    self.current_program = self.solution_fillomino
+                step +=1
+            print(self.solution_steps)
+        max_index = puzzle_list.index(max(puzzle_list))
+        print(puzzle_steps)
+        return puzzle_list[max_index]
+        return self.current_puzzle
+    
+
