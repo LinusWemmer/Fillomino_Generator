@@ -37,7 +37,6 @@ class Fillomino_Generator:
         self.current_program = solution_string
 
     def store_puzzle(self, model):
-        print("bla")
         sym_seq =  model.symbols(shown=True)
         self.current_puzzle = []
         self.current_program = ""
@@ -92,16 +91,15 @@ class Fillomino_Generator:
             self.ctl.ground([("base",[])])
             self.ctl.add("base", ["n", "k"], expand_area)
             self.ctl.ground([("base",[self.length, self.max_region])])
-            result = False
             with self.ctl.solve(yield_=True) as handle:
+                best_model = None
+                for model in handle:
+                    best_model = model
                 result = handle.get()
                 if result.unsatisfiable:
                     satisfiable = False
                 else:
-                    self.store_puzzle(handle.model())
-            #if self.ctl.solve(on_finish=self.store_puzzle, yield_=True).unsatisfiable:
-            #    satisfiable = False  
-            #self.step +=1
+                    self.store_puzzle(best_model)
             print(self.step)
         print(self.solution_steps)
         return self.current_puzzle
