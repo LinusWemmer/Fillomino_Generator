@@ -1,7 +1,7 @@
 cell(R,C) :- R = 1..n, C = 1..n.
 % Assumption: We get a valid fillomino as input (a solvable one)
 
-1 {removed(R,C,N): fillomino(R,C,N)}2.
+1 {removed(R,C,N): fillomino(R,C,N), N>1} 1.
 % Guess a Cell to remove .
 
 remaining(R,C,N) :- fillomino(R,C,N), not removed(R,C,N).
@@ -30,26 +30,31 @@ remaining_regions(R1,C1,R2,C2) :- remaining_regions(R1,C1,R3,C3), remaining_regi
 remaining_region_size(R,C,N) :- N = #count{R2,C2 : remaining_regions(R,C,R2,C2)}, remaining(R,C,_).
 %The region sizes of all remaining regions
 
-removed_region(R2,C2,N) :- removed(R1,C1,N), remaining(R2,C2,N), adjacent(R1,C1,R2,C2).
-removed_region(R2,C2,N) :- removed_region(R1,C1,N), remaining(R2,C2,N), adjacent(R1,C1,R2,C2).
-% contains all cells that were in the region containing the removed number.
-
-removed_region_block(R,C,R,C) :- removed_region(R,C,_).
-removed_region_block(R1,C1,R2,C2) :- removed_region(R1,C1,N), removed_region(R2,C2,N), adjacent(R1,C1,R2,C2).
-removed_region_block(R1,C1,R3,C3) :- removed_region_block(R1,C1,R2,C2), removed_region_block(R2,C2,R3,C3).
-% contains all cells that are still "together" after removing the cell.
-
 blocked(R1,C1) :-  free(R1,C1), removed_region(R2,C2,N), adjacent(R1,C1,R2,C2), (AREA +1) > N, AREA = #sum{S : remaining_region_size(R3,C3,S), adjacent(R3,C3,R1,C1), remaining(R3,C3,N)}.
 % A cell is blocked if expanding into this cell would yield a region that is to large. (TODO: maybe add +1?)
 #show blocked/2.
 
+removed_region(R2,C2,N) :- removed(R1,C1,N), remaining(R2,C2,N), adjacent(R1,C1,R2,C2).
+removed_region(R2,C2,N) :- removed_region(R1,C1,N), remaining(R2,C2,N), adjacent(R1,C1,R2,C2).
+% contains all cells that were in the region containing the removed number.
 
-free_neighbor(R1,C1,R2,C2) :- free(R1,C1), removed_region_block(R2,C2,_,_), adjacent(R1,C1,R2,C2), not blocked(R1,C1).
-% all free neighbors of the region (can probably be optimized to use adjacent cells of the removed cell only)
 
-free_neighbor_count(R,C,N) :- removed_region(R,C,_), N = #count{R1,C1 : free_neighbor(R1,C1,R2,C2), removed_region_block(R2,C2,R,C)}. 
+max_region(R1,C1,R1,C1) :- removed(R2,C2,N), adjacent(R1,C1,R2,C2), remaining(R1,C1,N).
+% Cells that are empty or in the same region as the removed block are in the maximum expansion of the region
 
-expandable_cell(R1,C1,N) :- removed(R1,C1,N), adjacent (R1,C1,R2,C2), free_neighbor_count(R2,C2,1).
+max_region(R1,C1,R2,C2) :- max_region(R2,C2,R2,C2), remaining(R2,C2,N), remaining(R1,C1,N), adjacent(R1,C1,R2,C2).
+max_region(R1,C1,R2,C2) :- max_region(R2,C2,R2,C2), free(R1,C1), not removed(R1,C1,_), adjacent(R1,C1,R2,C2), not blocked(R1,C1).
+
+max_region(R1,C1,R2,C2) :- max_region(R2,C2,R1,C1).
+%symmetry
+
+max_region(R,C,R,C) :- max_region(R,C,_,_).
+%reflexivity
+
+max_region(R1,C1,R2,C2) :- max_region(R1,C1,R3,C3), max_region(R3,C3,R2,C2).
+
+max_region_size(R1,C1,MAX) :- max_region(R1,C1,_,_), MAX = #count{R3,C3 : max_region(R3,C3,R1,C1)}, adjacent(R1,C1,R2,C2), removed(R2,C2,_).
+expandable_cell(R1,C1,N) :- removed(R1,C1,N), adjacent (R1,C1,R2,C2), remaining(R2,C2,N), max_region_size(R2,C2,MAX), MAX < N.
 
 
 derivable(R,C,N) :- expandable_cell(R,C,N).

@@ -82,7 +82,7 @@ class Fillomino_Generator:
         expand_area_string = open("logic_programs/expand_area.lp", "r")
         expand_area = expand_area_string.read()
         expand_area_string.close()
-        enter_one_string = open("logic_programs/expand_area.lp", "r")
+        enter_one_string = open("logic_programs/enter_one.lp", "r")
         enter_one = enter_one_string.read()
         enter_one_string.close()
         while satisfiable:
