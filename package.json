@@ -1,0 +1,26 @@
+{
+  "name": "Fillomino_Projekt",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bla.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LinusWemmer/Fillomino_Generator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LinusWemmer/Fillomino_Generator/issues"
+  },
+  "homepage": "https://github.com/LinusWemmer/Fillomino_Generator#readme",
+  "dependencies": {
+    "pzpr": "^0.11.1"
+  }
+}
