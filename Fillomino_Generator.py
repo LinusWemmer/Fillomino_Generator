@@ -1,5 +1,3 @@
-import tkinter as tk
-import re
 import clingo 
 import time
 
@@ -63,14 +61,13 @@ class Fillomino_Generator:
         return self.solution_fillomino
     
     def generate_stats(self):
+        # No randomization is needed; a different Fillomino is generated every time
+        # For large sizes, we probably need to give random cells to reduce the search space.
         self.ctl.add("base", ["n", "k"], self.gen)
         self.ctl.ground([("base", [self.length, self.max_region])])
-        print("Grounded")
-        statistics_list = []
-        for i in range (0,1000):
-            self.ctl.solve()
-            statistics_list.append(self.ctl.statistics["summary"]["times"]["total"])
-        return statistics_list
+        with self.ctl.solve(yield_=True) as handle:
+            handle.get()
+        return self.ctl.statistics["summary"]["times"]["total"]
     
     
     def generate_puzzle(self):
