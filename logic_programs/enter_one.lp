@@ -2,7 +2,7 @@ cell(R,C) :- R = 1..n, C = 1..n.
 % Assumption: We get a valid fillomino as input (a solvable one)
 
 1 {removed(R,C,1): fillomino(R,C,1)} 1.
-% Guess a Cell filled with one to remove .
+% Guess a Cell filled with a one to remove .
 
 remaining(R,C,N) :- fillomino(R,C,N), not removed(R,C,N).
 
@@ -35,6 +35,6 @@ remaining_region_size(R,C,N) :- N = #count{R2,C2 : remaining_regions(R,C,R2,C2)}
 :- removed(R1,C1,1), adjacent(R1,C1,R2,C2), free(R2,C2).
 
 #show removed/3.
-#show neighbor/3.
+#show remaining/3.
 
 
