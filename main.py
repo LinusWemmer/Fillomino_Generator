@@ -28,13 +28,13 @@ if __name__ == "__main__":
     # max_region = input("Maximum Region: ")
     # This works quite reliably for size up to 7 (and works with 8)
     # For quicker testing for now:
-    size = 5
-    max_region = 6
+    size = 9
+    max_region = 10
 
     gen = Fillomino_Generator(size, max_region)
     gen_model = gen.generate_fillomino()
     print_fillomino(gen_model, size)
     puzzle = print_fillomino(gen.generate_puzzle(), size)   
-    result = subprocess.run(['node', 'bla.js', json.dumps(puzzle)], capture_output=True, text=True)
+    result = subprocess.run(['node', 'puzzle.js', json.dumps(puzzle)], capture_output=True, text=True)
     print(result.stdout)
 

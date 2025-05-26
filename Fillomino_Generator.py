@@ -8,15 +8,19 @@ class Fillomino_Generator:
         self.length = clingo.Number(int(length))
         self.max_region = clingo.Number(int(max_region))
 
-        solver = open("logic_programs/Fillomino_Solver.lp", "r")
+        solver = open("logic_programs/Fillomino_Generator.lp", "r")
         self.gen = solver.read()
         solver.close()
 
-        # Solution of generated Puzzle
+        filler = open("logic_programs/Partial_Fill.lp", "r")
+        self.fill = filler.read()
+        filler.close()
+
+        # Solution of generated Puzzle (model & as string)
         self.solution_fillomino = None
         self.solution_program = ""
 
-        # The program string of the current 
+        # The program string of the current iteration 
         self.current_program = ""
         # The model of the current iteration, as per the clingo api
         self.current_puzzle = []
@@ -27,7 +31,7 @@ class Fillomino_Generator:
 
 
     def store_solution(self, model):
-        self.solution_fillomino =  model.symbols(shown=True)
+        self.solution_fillomino = model.symbols(shown=True)
         solution_string = ""
         for atom in self.solution_fillomino:
             solution_string += str(atom) + ". "
@@ -59,6 +63,28 @@ class Fillomino_Generator:
         self.ctl.solve(on_model=self.store_solution)
         print(self.ctl.statistics["summary"]["times"])
         return self.solution_fillomino
+    
+
+    def generate_alt(self):
+        # The idea here is to place regions iteratively into the board, to reduce the search space of the asp program
+        # Add some regions to the empty board
+        #for i in range(int(str(self.max_region)) - 1, int(str(self.max_region)) + 1):
+        self.ctl = clingo.Control(arguments=["-t 8", "--stats"])
+        self.ctl.add("base", ["n", "k"], self.fill)
+        self.ctl.add("base", ["n", "k"], self.current_program)
+        self.ctl.ground([("base", [self.length, self.max_region])])
+        self.ctl.solve(on_model=self.store_solution)
+        print("Filled")
+        # Solve the Fillomino for the partially filled board
+        self.ctl = clingo.Control(arguments=["-t 8", "--stats"])
+        self.ctl.add("base", ["n", "k"], self.gen)
+        self.ctl.add("base", ["n", "k"], self.current_program)
+        self.ctl.ground([("base", [self.length, self.max_region])])
+        print("Grounded")
+        self.ctl.solve(on_model=self.store_solution)
+        print(self.ctl.statistics["summary"]["times"])
+        return self.solution_fillomino
+
     
     def generate_stats(self):
         # No randomization is needed; a different Fillomino is generated every time
