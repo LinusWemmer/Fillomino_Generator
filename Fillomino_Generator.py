@@ -3,14 +3,15 @@ import time
 
 
 class Fillomino_Generator:
-    def __init__(self, length:int, max_region:int):
+    def __init__(self, size:int, largest_region:int, max_regions:int):
         self.ctl = clingo.Control(arguments=["-t 8", "--stats"])
-        self.length = clingo.Number(int(length))
-        self.max_region = clingo.Number(int(max_region))
+        self.size = clingo.Number(int(size))
+        self.largest_region = clingo.Number(int(largest_region))
+        self.max_regions = clingo.Number(int(max_regions))
 
-        solver = open("logic_programs/Fillomino_Generator.lp", "r")
-        self.gen = solver.read()
-        solver.close()
+        generator = open("logic_programs/Fillomino_Generator.lp", "r")
+        self.gen = generator.read()
+        generator.close()
 
         filler = open("logic_programs/Partial_Fill.lp", "r")
         self.fill = filler.read()
@@ -57,10 +58,20 @@ class Fillomino_Generator:
     def generate_fillomino(self):
         # No randomization is needed; a different Fillomino is generated every time
         # For large sizes, we probably need to give random cells to reduce the search space.
-        self.ctl.add("base", ["n", "k"], self.gen)
-        self.ctl.ground([("base", [self.length, self.max_region])])
+        self.ctl.add("base", ["n", "k", "r"], self.gen)
+        self.ctl.ground([("base", [self.size, self.largest_region, self.max_regions])])
         print("Grounded")
         self.ctl.solve(on_model=self.store_solution)
+        #with self.ctl.solve(yield_=True) as handle:
+        #    model_number = 0
+        #    for model in handle:
+        #        model_number += 1
+        #        if model.optimality_proven():
+        #            handle.cancel()
+        #            self.store_solution(model)
+        #        elif model_number > 4: #Can maybe be given as part of input to change difficulty
+        #            handle.cancel
+        #            self.store_solution(model)
         print(self.ctl.statistics["summary"]["times"])
         return self.solution_fillomino
     
@@ -68,18 +79,18 @@ class Fillomino_Generator:
     def generate_alt(self):
         # The idea here is to place regions iteratively into the board, to reduce the search space of the asp program
         # Add some regions to the empty board
-        #for i in range(int(str(self.max_region)) - 1, int(str(self.max_region)) + 1):
+        #for i in range(int(str(self.largest_region)) - 1, int(str(self.largest_region)) + 1):
         self.ctl = clingo.Control(arguments=["-t 8", "--stats"])
         self.ctl.add("base", ["n", "k"], self.fill)
         self.ctl.add("base", ["n", "k"], self.current_program)
-        self.ctl.ground([("base", [self.length, self.max_region])])
+        self.ctl.ground([("base", [self.size, self.largest_region])])
         self.ctl.solve(on_model=self.store_solution)
         print("Filled")
         # Solve the Fillomino for the partially filled board
         self.ctl = clingo.Control(arguments=["-t 8", "--stats"])
         self.ctl.add("base", ["n", "k"], self.gen)
         self.ctl.add("base", ["n", "k"], self.current_program)
-        self.ctl.ground([("base", [self.length, self.max_region])])
+        self.ctl.ground([("base", [self.size, self.largest_region])])
         print("Grounded")
         self.ctl.solve(on_model=self.store_solution)
         print(self.ctl.statistics["summary"]["times"])
@@ -90,7 +101,7 @@ class Fillomino_Generator:
         # No randomization is needed; a different Fillomino is generated every time
         # For large sizes, we probably need to give random cells to reduce the search space.
         self.ctl.add("base", ["n", "k"], self.gen)
-        self.ctl.ground([("base", [self.length, self.max_region])])
+        self.ctl.ground([("base", [self.size, self.largest_region])])
         with self.ctl.solve(yield_=True) as handle:
             handle.get()
         return self.ctl.statistics["summary"]["times"]["total"]
@@ -113,7 +124,7 @@ class Fillomino_Generator:
             self.ctl.add("base", [], self.current_program)
             self.ctl.ground([("base",[])])
             self.ctl.add("base", ["n", "k"], expand_area)
-            self.ctl.ground([("base",[self.length, self.max_region])])
+            self.ctl.ground([("base",[self.size, self.largest_region])])
             with self.ctl.solve(yield_=True) as handle:
                 best_model = None
                 for model in handle:
@@ -127,38 +138,5 @@ class Fillomino_Generator:
         print(self.solution_steps)
         return self.current_puzzle
     
-
-    # Multiple Tries to generate an efficient puzzle
-    # TODO: we should probably start at a different place in the search area, as of now multiple tries can generate the same puzzle
-  #  def generate_puzzle_maximize(self, n: int):
-   #     solver = open("logic_programs/expand_area.lp", "r")
-    #    expand_area = solver.read()
-     #   solver.close()
-      #  puzzle_steps = []
-       # puzzle_list = []
-        #for i in range(0,n):
-         #   self.solution_steps = []
-          #  satisfiable = True
-           # self.current_program = self.solution_program
-            #step = 1
-            #while satisfiable:
-             #   print(step)
-              #  self.ctl = clingo.Control(arguments=["-t 8", "--stats"])
-               # self.ctl.add("base", [], self.current_program)
-                #self.ctl.ground([("base",[])])
-                
-                #self.ctl.add("base", ["n", "k"], expand_area)
-               # self.ctl.ground([("base",[self.length, self.max_region])])
-              #  if self.ctl.solve(on_model=self.store_puzzle(step)).unsatisfiable:
-             #       satisfiable = False  
-            #        puzzle_steps.append(step)
-           #         puzzle_list.append(self.current_puzzle)
-         #           self.current_program = self.solution_fillomino
-          #      step +=1
-        #    print(self.solution_steps)
-       # max_index = puzzle_list.index(max(puzzle_list))
-      #  print(puzzle_steps)
-     #   return puzzle_list[max_index]
-     #   return self.current_puzzle
     
 

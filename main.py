@@ -28,10 +28,11 @@ if __name__ == "__main__":
     # max_region = input("Maximum Region: ")
     # This works quite reliably for size up to 7 (and works with 8)
     # For quicker testing for now:
-    size = 9
-    max_region = 10
+    size = 10
+    largest_region = 9
+    max_regions = 30
 
-    gen = Fillomino_Generator(size, max_region)
+    gen = Fillomino_Generator(size, largest_region, max_regions)
     gen_model = gen.generate_fillomino()
     print_fillomino(gen_model, size)
     puzzle = print_fillomino(gen.generate_puzzle(), size)   
