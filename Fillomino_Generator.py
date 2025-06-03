@@ -1,5 +1,6 @@
 import clingo 
-import time
+import copy
+import random
 
 
 class Fillomino_Generator:
@@ -13,9 +14,16 @@ class Fillomino_Generator:
         self.gen = generator.read()
         generator.close()
 
+        solver = open("logic_programs/Fillomino_Solver.lp", "r")
+        self.solver = solver.read()
+        solver.close()
+
         filler = open("logic_programs/Partial_Fill.lp", "r")
         self.fill = filler.read()
         filler.close()
+
+        # Number of steps taking in generating the puzzle
+        self.step = 0
 
         # Solution of generated Puzzle (model & as string)
         self.solution_fillomino = None
@@ -23,19 +31,19 @@ class Fillomino_Generator:
 
         # The program string of the current iteration 
         self.current_program = ""
-        # The model of the current iteration, as per the clingo api
+        # The model of the current iteration, as a List
         self.current_puzzle = []
 
         #Steps to get from the puzzle to the solution
         self.solution_steps = []
-        
-
+    
 
     def store_solution(self, model):
         self.solution_fillomino = model.symbols(shown=True)
         solution_string = ""
         for atom in self.solution_fillomino:
             solution_string += str(atom) + ". "
+            self.current_puzzle.append(atom)
         self.solution_program = solution_string
         self.current_program = solution_string
 
@@ -62,39 +70,9 @@ class Fillomino_Generator:
         self.ctl.ground([("base", [self.size, self.largest_region, self.max_regions])])
         print("Grounded")
         self.ctl.solve(on_model=self.store_solution)
-        #with self.ctl.solve(yield_=True) as handle:
-        #    model_number = 0
-        #    for model in handle:
-        #        model_number += 1
-        #        if model.optimality_proven():
-        #            handle.cancel()
-        #            self.store_solution(model)
-        #        elif model_number > 4: #Can maybe be given as part of input to change difficulty
-        #            handle.cancel
-        #            self.store_solution(model)
         print(self.ctl.statistics["summary"]["times"])
         return self.solution_fillomino
     
-
-    def generate_alt(self):
-        # The idea here is to place regions iteratively into the board, to reduce the search space of the asp program
-        # Add some regions to the empty board
-        #for i in range(int(str(self.largest_region)) - 1, int(str(self.largest_region)) + 1):
-        self.ctl = clingo.Control(arguments=["-t 8", "--stats"])
-        self.ctl.add("base", ["n", "k"], self.fill)
-        self.ctl.add("base", ["n", "k"], self.current_program)
-        self.ctl.ground([("base", [self.size, self.largest_region])])
-        self.ctl.solve(on_model=self.store_solution)
-        print("Filled")
-        # Solve the Fillomino for the partially filled board
-        self.ctl = clingo.Control(arguments=["-t 8", "--stats"])
-        self.ctl.add("base", ["n", "k"], self.gen)
-        self.ctl.add("base", ["n", "k"], self.current_program)
-        self.ctl.ground([("base", [self.size, self.largest_region])])
-        print("Grounded")
-        self.ctl.solve(on_model=self.store_solution)
-        print(self.ctl.statistics["summary"]["times"])
-        return self.solution_fillomino
 
     
     def generate_stats(self):
@@ -105,6 +83,56 @@ class Fillomino_Generator:
         with self.ctl.solve(yield_=True) as handle:
             handle.get()
         return self.ctl.statistics["summary"]["times"]["total"]
+    
+    def generate_puzzle_naive(self):
+        unique_solution = True
+        self.step = 1
+        while unique_solution:
+            print(self.step)
+            self.step += 1
+            random_cells = copy.deepcopy(self.current_puzzle.copy())
+            copied_board = copy.deepcopy(self.current_puzzle.copy())
+            random.shuffle(random_cells)
+            for cell in random_cells:
+                copied_board.remove(cell)
+                #TODO:improve this, turn it into a function!!!
+                current_str = ""
+                for atom in copied_board:
+                    current_str += str(atom) + (".")
+                self.ctl = clingo.Control(arguments=["-t 8", "--stats", "0"])
+                self.ctl.add("base", [], current_str)
+                self.ctl.ground([("base",[])])
+                self.ctl.add("base", ["n", "k"], self.solver)
+                self.ctl.ground([("base",[self.size, self.largest_region])])
+                model_list = []
+                unique = True
+                with self.ctl.solve(yield_=True) as hnd:
+                    results = 0
+                    while unique:
+                        hnd.resume()
+                        results += 1
+                        _ = hnd.wait()
+                        m = hnd.model()
+                        if m is None:
+                            break
+                        else:
+                            model_list.append(m)
+                        if results > 1:
+                            unique = False
+                            print("break")
+                            break
+                if unique:
+                    self.current_program = current_str
+                    self.current_puzzle = copied_board
+                    print(self.current_program)
+                    print("\n")
+                    print(cell)
+                    break
+                else: 
+                    copied_board = copy.deepcopy(self.current_puzzle.copy())
+            else:
+                unique_solution = False                               
+        return self.current_puzzle
     
     
     def generate_puzzle(self):
