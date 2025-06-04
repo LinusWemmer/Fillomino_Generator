@@ -18,9 +18,6 @@ class Fillomino_Generator:
         self.solver = solver.read()
         solver.close()
 
-        filler = open("logic_programs/Partial_Fill.lp", "r")
-        self.fill = filler.read()
-        filler.close()
 
         # Number of steps taking in generating the puzzle
         self.step = 0
@@ -87,51 +84,44 @@ class Fillomino_Generator:
     def generate_puzzle_naive(self):
         unique_solution = True
         self.step = 1
-        while unique_solution:
-            print(self.step)
-            self.step += 1
-            random_cells = copy.deepcopy(self.current_puzzle.copy())
-            copied_board = copy.deepcopy(self.current_puzzle.copy())
-            random.shuffle(random_cells)
-            for cell in random_cells:
-                copied_board.remove(cell)
-                #TODO:improve this, turn it into a function!!!
-                current_str = ""
-                for atom in copied_board:
-                    current_str += str(atom) + (".")
-                self.ctl = clingo.Control(arguments=["-t 8", "--stats", "0"])
-                self.ctl.add("base", [], current_str)
-                self.ctl.ground([("base",[])])
-                self.ctl.add("base", ["n", "k"], self.solver)
-                self.ctl.ground([("base",[self.size, self.largest_region])])
-                model_list = []
-                unique = True
-                with self.ctl.solve(yield_=True) as hnd:
-                    results = 0
-                    while unique:
-                        hnd.resume()
-                        results += 1
-                        _ = hnd.wait()
-                        m = hnd.model()
-                        if m is None:
-                            break
-                        else:
-                            model_list.append(m)
-                        if results > 1:
-                            unique = False
-                            print("break")
-                            break
-                if unique:
-                    self.current_program = current_str
-                    self.current_puzzle = copied_board
-                    print(self.current_program)
-                    print("\n")
-                    print(cell)
-                    break
-                else: 
-                    copied_board = copy.deepcopy(self.current_puzzle.copy())
-            else:
-                unique_solution = False                               
+        removal_queue = copy.deepcopy(self.current_puzzle.copy())
+        copied_board = copy.deepcopy(self.current_puzzle.copy())
+        random.shuffle(removal_queue)
+        for cell in removal_queue:
+            print(f"Queue Size: {len(removal_queue)}, Trying Cell: {cell}")
+            copied_board.remove(cell)
+            current_str = ""
+            for atom in copied_board:
+                current_str += str(atom) + (".")
+            self.ctl = clingo.Control(arguments=["-t 8", "--stats", "0"])
+            self.ctl.add("base", [], current_str)
+            self.ctl.ground([("base",[])])
+            self.ctl.add("base", ["n", "k"], self.solver)
+            self.ctl.ground([("base",[self.size, self.largest_region])])
+            model_list = []
+            unique = True
+            with self.ctl.solve(yield_=True) as hnd:
+                results = 0
+                while unique:
+                    hnd.resume()
+                    results += 1
+                    _ = hnd.wait()
+                    m = hnd.model()
+                    if m is None:
+                        break
+                    else:
+                        model_list.append(m)
+                    if results > 1:
+                        unique = False
+                        break
+            if unique:
+                print(f"{self.step}: Removed Cell: {cell}")
+                self.step += 1
+                self.current_program = current_str
+                self.current_puzzle = copied_board
+            else: 
+                print(f"Failed to remove {cell}.")
+                copied_board.append(cell)                            
         return self.current_puzzle
     
     

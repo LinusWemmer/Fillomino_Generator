@@ -1,6 +1,7 @@
 import clingo 
 import subprocess
 import json
+import time
 from Fillomino_Generator import *
 
 
@@ -28,14 +29,16 @@ if __name__ == "__main__":
     # max_region = input("Maximum Region: ")
     # This works quite reliably for size up to 7 (and works with 8)
     # For quicker testing for now:
-    size = 10
-    largest_region = 9
-    max_regions = 30
-
+    size = 7
+    largest_region = 5
+    max_regions = 25
+    start_time = time.time()
+    print("Starting!\n")
     gen = Fillomino_Generator(size, largest_region, max_regions)
     gen_model = gen.generate_fillomino()
     print_fillomino(gen_model, size)
-    puzzle = print_fillomino(gen.generate_puzzle(), size)   
+    puzzle = print_fillomino(gen.generate_puzzle_naive(), size)   
     result = subprocess.run(['node', 'puzzle.js', json.dumps(puzzle)], capture_output=True, text=True)
     print(result.stdout)
+    print(f"Total Computation Time:{time.time()-start_time}")
 
