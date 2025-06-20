@@ -30,18 +30,27 @@ unfinished_region(R,C,N) :- fillomino(R,C,N), region_size(R,C,M), M != N.
 
 % BLOCKED CELL:
 % one neighboring region
-blocked_cell(R,C,N) :- empty(R,C), adjacent(R,C,R1,C1), fillomino(R1,C1,N), region_size(R1,C1,N).
+blocked(R,C,N) :- empty(R,C), adjacent(R,C,R1,C1), fillomino(R1,C1,N), region_size(R1,C1,N).
 % two neighboring regions
-blocked_cell(R,C,N) :- empty(R,C), adjacent(R,C,R1,C1), fillomino(R1,C1,N), adjacent(R,C,R2,C2), fillomino(R2,C2,N),
+blocked(R,C,N) :- empty(R,C), adjacent(R,C,R1,C1), fillomino(R1,C1,N), adjacent(R,C,R2,C2), fillomino(R2,C2,N),
                        region_size(R1,C1,S1), region_size(R2,C2,S2), (S1 + S2 + 1) > N, not region(R1,C1,R2,C2).
 %three neighboring regions
-blocked_cell(R,C,N) :- empty(R,C), adjacent(R,C,R1,C1), fillomino(R1,C1,N), adjacent(R,C,R2,C2), fillomino(R2,C2,N), adjacent(R,C,R3,C3), fillomino(R3,C3,N),
+blocked(R,C,N) :- empty(R,C), adjacent(R,C,R1,C1), fillomino(R1,C1,N), adjacent(R,C,R2,C2), fillomino(R2,C2,N), adjacent(R,C,R3,C3), fillomino(R3,C3,N),
                        region_size(R1,C1,S1), region_size(R2,C2,S2), region_size(R3,C3,S3), (S1 + S2 + S3 + 1) > N, 
                        not region(R1,C1,R2,C2), not region(R1,C1,R3,C3), not region(R3,C3,R2,C2).
 
 % EXPAND CELL:
-expandable_candidate(R1,C1,N) :- unfinished_region(R2,C2,N), adjacent(R1,C1,R2,C2), empty(R1,C1), not blocked_cell(R1,C1,N).
+expandable_candidate(R1,C1,N) :- unfinished_region(R2,C2,N), adjacent(R1,C1,R2,C2), empty(R1,C1), not blocked(R1,C1,N).
+
 % cells that a region could potentially be expanded to.
+max_expandable_region(R1,C1,R1,C1,R,C,N) :- expandable_candidate(R,C,N), adjacent(R,C,R1,C1), fillomino(R1,C1,N).
+max_expandable_region(R1,C1,R2,C2,R,C,N) :- max_expandable_region(R1,C1,R3,C3,R,C,N), adjacent(R3,C3,R2,C2), fillomino(R2,C2,N).
+max_expandable_region(R1,C1,R2,C2,R,C,N) :- max_expandable_region(R1,C1,R3,C3,R,C,N), adjacent(R3,C3,R2,C2), empty(R2,C2), not blocked(R2,C2,N), R2 != R.
+max_expandable_region(R1,C1,R2,C2,R,C,N) :- max_expandable_region(R1,C1,R3,C3,R,C,N), adjacent(R3,C3,R2,C2), empty(R2,C2), not blocked(R2,C2,N), C2 !=C.
+
+max_expansion(R,C,S,N) :- expandable_candidate(R,C,N), adjacent(R,C,R1,C1), S= #count{R2,C2 : max_expandable_region(R1,C1,R2,C2,R,C,N)}, fillomino(R1,C1,N).
+
+derivable(R,C,N) :- max_expansion(R,C,S,N), S<N.
 
 expandable_count(R1,C1,S) :- S = #count{R2,C2 : expandable_candidate(R2,C2,N), adjacent(R2,C2,R3,C3), region(R1,C1,R3,C3)}, unfinished_region(R1,C1,N).
 % How many cells a region can be expanded to.
@@ -58,5 +67,5 @@ derivable(R1,C1,N) :- expandable_candidate(R1,C1,N), adjacent(R1,C1,R2,C2), expa
 % We can derive a cell if it is the only place a neighboring region can expand to
 
 #show derivable/3. 
-#show blocked_cell/3.
-#show expandable_count/3.
+#show blocked/3.
+%#show expandable_count/3.
