@@ -70,8 +70,6 @@ class Fillomino_Generator:
         print(self.ctl.statistics["summary"]["times"])
         return self.solution_fillomino
     
-
-    
     def generate_stats(self):
         # No randomization is needed; a different Fillomino is generated every time
         # For large sizes, we probably need to give random cells to reduce the search space.
@@ -81,8 +79,8 @@ class Fillomino_Generator:
             handle.get()
         return self.ctl.statistics["summary"]["times"]["total"]
     
+    #generates a puzzle by removing random clues until there is no longer a unique solution
     def generate_puzzle_naive(self):
-        unique_solution = True
         self.step = 1
         removal_queue = copy.deepcopy(self.current_puzzle.copy())
         copied_board = copy.deepcopy(self.current_puzzle.copy())
@@ -121,8 +119,12 @@ class Fillomino_Generator:
                 self.current_puzzle = copied_board
             else: 
                 print(f"Failed to remove {cell}.")
-                copied_board.append(cell)                            
+                copied_board.append(cell)      
+        print(self.current_program)                      
         return self.current_puzzle
+    
+    def get_human_solvabile_puzzle(self):
+        pass
     
     
     def generate_puzzle(self):
