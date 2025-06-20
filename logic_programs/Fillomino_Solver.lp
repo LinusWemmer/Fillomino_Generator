@@ -3,22 +3,22 @@ cell(R,C) :- R = 1..n, C = 1..n.
 1 {fillomino(R,C,1..k)} 1 :- cell(R,C).
 % achieved: A n×n grid is fillomino with random numbers from 1 to k.
 
-connected(R1,C,R2,C) :- fillomino(R1,C,N), fillomino(R2,C,N), R2 = R1+1.
-connected(R,C1,R,C2) :- fillomino(R,C1,N), fillomino(R,C2,N), C2 = C1+1.
-% achieved: neighboring cells with the same number are connected.
+region(R1,C,R2,C) :- fillomino(R1,C,N), fillomino(R2,C,N), R2 = R1+1.
+region(R,C1,R,C2) :- fillomino(R,C1,N), fillomino(R,C2,N), C2 = C1+1.
+% achieved: neighboring cells with the same number are region.
 
-connected(R,C,R,C) :- cell(R,C).
-% achieved: connectedness is reflexive 
+region(R,C,R,C) :- cell(R,C).
+% achieved: regionness is reflexive 
 
-connected(R1,C1,R2,C2) :- connected(R2,C2,R1,C1).
-% achieved: connectedness is symmetric
+region(R1,C1,R2,C2) :- region(R2,C2,R1,C1).
+% achieved: regionness is symmetric
 
-connected(R1,C1,R2,C2) :- connected(R1,C1,R3,C3), connected(R3,C3,R2,C2).
-% achieved: connectedness is transitive
+region(R1,C1,R2,C2) :- region(R1,C1,R3,C3), region(R3,C3,R2,C2).
+% achieved: regionness is transitive
 
-connected_size(R1,C1,N) :- N = #count{R2,C2 : connected(R1,C1,R2,C2)}, cell(R1,C1).
+region_size(R1,C1,N) :- N = #count{R2,C2 : region(R1,C1,R2,C2)}, cell(R1,C1).
 
-N1 = N2 :- connected_size(R,C,N1), fillomino(R,C,N2).
+N1 = N2 :- region_size(R,C,N1), fillomino(R,C,N2).
 % achieved: Cells fillomino with number N are in a region of size N.
 
 #show fillomino/3.
