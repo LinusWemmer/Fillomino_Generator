@@ -27,9 +27,8 @@ def print_fillomino(gen_model, size: int):
 if __name__ == "__main__":
     # size = input("Size: ")
     # max_region = input("Maximum Region: ")
-    # This works quite reliably for size up to 7 (and works with 8)
     # For quicker testing for now:
-    size = 7
+    size = 5
     largest_region = 5
     max_regions = 25
     start_time = time.time()
