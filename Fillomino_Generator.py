@@ -22,6 +22,10 @@ class Fillomino_Generator:
         self.h_strats = h_strats.read()
         h_strats.close()
 
+        h_opt = open("logic_programs/human_strategies_choice.lp")
+        self.h_opt = h_opt.read()
+        h_strats.close()
+
         # Number of steps taking in generating the puzzle
         self.step = 0
 
@@ -43,8 +47,8 @@ class Fillomino_Generator:
         for atom in solution_fillomino:
             solution_string += str(atom) + ". "
             self.current_program_list.append(str(atom) + ".")
-        self.solution_program_str = solution_string
         self.current_program_str = solution_string
+        self.solution_program_str = solution_string.replace("fillomino", "solution")
 
     def generate_fillomino(self):
         # No randomization is needed; a different Fillomino is generated every time
@@ -115,7 +119,6 @@ class Fillomino_Generator:
                 ctl.ground([("base",[])])
                 ctl.add("base", ["n"], self.h_strats)
                 ctl.ground([("base",[self.size])])
-                print("grounded")
                 with ctl.solve(yield_=True) as handle:
                     for model in handle:
                         sym_seq = model.symbols(shown=True)
@@ -130,9 +133,27 @@ class Fillomino_Generator:
                 print("Puzzle can be solved! ")
                 fillable = True
             else: 
-                fillable = True
+                ctl = clingo.Control(arguments=["-t 8"])
+                ctl.add("base", [], self.solution_program_str)
+                ctl.ground([("base",[])])
+                ctl.add("base", [], computed_cells)
+                ctl.ground([("base",[])])
+                ctl.add("base", ["n"], self.h_opt)
+                ctl.ground([("base",[self.size])])
+                with ctl.solve(yield_=True) as handle:
+                    model = handle.model()
+                    for atom in model.symbols(shown=True):
+                        selected = str(atom).replace("selected", "fillomino") 
+                        self.current_program_str += selected + "."
+                        computed_cells += selected + "."
+                        self.current_program_list.append(selected)
+                        solved_cells += 1
+                        print(f"Added {selected} to puzzle.")
+                    derivable = True
         print(solved_cells)
+        print(self.current_program_list)
         print("Done.")
+        return self.current_program_list
     
     
     def store_puzzle(self, model):
