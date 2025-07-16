@@ -110,11 +110,11 @@ class Fillomino_Generator:
         computed_cells = self.current_program_str
         derived_cells = ""
         solved_cells = len(self.current_program_list)
+        filled = False
         derivable = True
-        fillable = False
-        while not fillable:
+        while not filled:
             while derivable:
-                ctl = clingo.Control(arguments=["-t 8", "--stats"])
+                ctl = clingo.Control(["-t 8", "--stats"])
                 ctl.add("base", [], computed_cells)
                 ctl.ground([("base",[])])
                 ctl.add("base", ["n"], self.h_strats)
@@ -131,9 +131,9 @@ class Fillomino_Generator:
                         print(derived_cells)
             if solved_cells == self.board_size:
                 print("Puzzle can be solved! ")
-                fillable = True
+                filled = True
             else: 
-                ctl = clingo.Control(arguments=["-t 8"])
+                ctl = clingo.Control(arguments=["-t 8", "--opt-mode=optN"])
                 ctl.add("base", [], self.solution_program_str)
                 ctl.ground([("base",[])])
                 ctl.add("base", [], computed_cells)
@@ -141,15 +141,18 @@ class Fillomino_Generator:
                 ctl.add("base", ["n"], self.h_opt)
                 ctl.ground([("base",[self.size])])
                 with ctl.solve(yield_=True) as handle:
-                    model = handle.model()
-                    for atom in model.symbols(shown=True):
-                        selected = str(atom).replace("selected", "fillomino") 
-                        self.current_program_str += selected + "."
-                        computed_cells += selected + "."
-                        self.current_program_list.append(selected)
-                        solved_cells += 1
-                        print(f"Added {selected} to puzzle.")
-                    derivable = True
+                    for model in handle:
+                        print(model.cost)
+                        if model.optimality_proven:
+                            for atom in model.symbols(shown=True):
+                                selected = str(atom).replace("selected", "fillomino") 
+                                self.current_program_str += selected + "."
+                                computed_cells += selected + "."
+                                self.current_program_list.append(selected)
+                                solved_cells += 1
+                                print(f"Added {selected} to puzzle.")
+                            derivable = True
+                            break
         print(solved_cells)
         print(self.current_program_list)
         print("Done.")

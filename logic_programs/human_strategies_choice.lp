@@ -71,6 +71,8 @@ derivable(R,C,N) :- empty_region_size(R,C,N), not fillable_region(R,C).
 derivable(R1,C1,N) :- expandable_candidate(R1,C1,N), adjacent(R1,C1,R2,C2), expandable_count(R2,C2,1), unfinished_region(R2,C2,N).
 % We can derive a cell if it is the only place a neighboring region can expand to
 
+#maximize{1,R,C : derivable(R,C,_)}.
+
 %#show derivable/3. 
 #show selected/3.
 %#show blocked/3.

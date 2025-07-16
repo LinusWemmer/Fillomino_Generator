@@ -67,5 +67,5 @@ derivable(R1,C1,N) :- expandable_candidate(R1,C1,N), adjacent(R1,C1,R2,C2), expa
 % We can derive a cell if it is the only place a neighboring region can expand to
 
 #show derivable/3. 
-#show blocked/3.
+%#show blocked/3.
 %#show expandable_count/3.
