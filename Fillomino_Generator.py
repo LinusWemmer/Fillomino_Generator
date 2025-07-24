@@ -22,9 +22,13 @@ class Fillomino_Generator:
         self.h_strats = h_strats.read()
         h_strats.close()
 
-        h_opt = open("logic_programs/human_strategies_choice.lp")
-        self.h_opt = h_opt.read()
-        h_strats.close()
+        h_max = open("logic_programs/max_human_strategies_choice.lp")
+        self.h_max = h_max.read()
+        h_max.close()
+
+        h_min = open("logic_programs/min_human_strategies_choice.lp")
+        self.h_min = h_min.read()
+        h_min.close()
 
         # Number of steps taking in generating the puzzle
         self.step = 0
@@ -44,6 +48,7 @@ class Fillomino_Generator:
     def store_solution(self, model):
         solution_fillomino = model.symbols(shown=True)
         solution_string = ""
+        self.solution_program_str = ""
         for atom in solution_fillomino:
             solution_string += str(atom) + ". "
             self.current_program_list.append(str(atom) + ".")
@@ -53,6 +58,7 @@ class Fillomino_Generator:
     def generate_fillomino(self):
         # No randomization is needed; a different Fillomino is generated every time
         # For large sizes, we probably need to give random cells to reduce the search space.
+        self.current_program_list= []
         ctl = clingo.Control(arguments=["-t 8", "--stats"])
         ctl.add("base", ["n", "k", "r"], self.gen)
         ctl.ground([("base", [self.size, self.largest_region, self.max_regions])])
@@ -74,12 +80,11 @@ class Fillomino_Generator:
             current_str = ""
             for atom in copied_board:
                 current_str += atom
-            ctl = clingo.Control(arguments=["-t 8", "--stats", "0"])
+            ctl = clingo.Control(arguments=["-t 8", "--stats", "2"])
             ctl.add("base", [], current_str)
             ctl.ground([("base",[])])
             ctl.add("base", ["n", "k"], self.solver)
             ctl.ground([("base",[self.size, self.largest_region])])
-            model_list = []
             unique = True
             with ctl.solve(yield_=True) as hnd:
                 results = 0
@@ -90,8 +95,6 @@ class Fillomino_Generator:
                     m = hnd.model()
                     if m is None:
                         break
-                    else:
-                        model_list.append(m)
                     if results > 1:
                         unique = False
                         break
@@ -106,14 +109,22 @@ class Fillomino_Generator:
         print(self.current_program_str)                       
         return self.current_program_list
     
-    def get_human_solvable_puzzle(self):
+    def get_human_solvable_puzzle(self, options="max"):
         computed_cells = self.current_program_str
         derived_cells = ""
         solved_cells = len(self.current_program_list)
         filled = False
         derivable = True
+        if options == "max":
+            h_opt = self.h_max
+        elif options == "min":
+            h_opt = self.h_min
+        else:
+            print("enter valid stuff")
+            return
         while not filled:
             while derivable:
+                # Derive cells using human strategies until failure
                 ctl = clingo.Control(["-t 8", "--stats"])
                 ctl.add("base", [], computed_cells)
                 ctl.ground([("base",[])])
@@ -133,12 +144,13 @@ class Fillomino_Generator:
                 print("Puzzle can be solved! ")
                 filled = True
             else: 
+                # Add cell such that more information can be derived
                 ctl = clingo.Control(arguments=["-t 8", "--opt-mode=optN"])
                 ctl.add("base", [], self.solution_program_str)
                 ctl.ground([("base",[])])
                 ctl.add("base", [], computed_cells)
                 ctl.ground([("base",[])])
-                ctl.add("base", ["n"], self.h_opt)
+                ctl.add("base", ["n"], h_opt)
                 ctl.ground([("base",[self.size])])
                 with ctl.solve(yield_=True) as handle:
                     for model in handle:
