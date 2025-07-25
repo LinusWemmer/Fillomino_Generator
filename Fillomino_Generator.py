@@ -165,8 +165,6 @@ class Fillomino_Generator:
                                 print(f"Added {selected} to puzzle.")
                             derivable = True
                             break
-        print(solved_cells)
-        print(self.current_program_list)
         print("Done.")
         return self.current_program_list
     
@@ -188,34 +186,42 @@ class Fillomino_Generator:
         self.solution_steps.append(removed_cells)
 
     def generate_puzzle(self):
-        #TODO: probably a subset of the program should be preground to avoid recomputation, e.g. pos and the adjacency predicate
-        #Though this only constitutes a small part of the computation time
-        #TODO: probably add heuristic to prioritize numbers with few neighbours, to avoid early splitting of regions
-        satisfiable = True
-        self.step = 1
-        expand_area_string = open("logic_programs/expand_area.lp", "r")
-        expand_area = expand_area_string.read()
-        expand_area_string.close()
-        enter_one_string = open("logic_programs/enter_one.lp", "r")
-        enter_one = enter_one_string.read()
-        enter_one_string.close()
-        while satisfiable:
-            ctl = clingo.Control(arguments=["-t 8", "--stats"])
-            ctl.add("base", [], self.current_program_str)
-            ctl.ground([("base",[])])
-            ctl.add("base", ["n", "k"], expand_area)
-            ctl.ground([("base",[self.size, self.largest_region])])
-            with ctl.solve(yield_=True) as handle:
-                best_model = None
-                for model in handle:
-                    best_model = model
-                result = handle.get()
-                if result.unsatisfiable:
-                    satisfiable = False
-                else:
-                    self.store_puzzle(best_model)
-            print(self.step)
-        print(self.solution_steps)
+        removal_queue = copy.deepcopy(self.current_program_list.copy())
+        copied_board = copy.deepcopy(self.current_program_list.copy())
+        random.shuffle(removal_queue)
+        while removal_queue:
+            cell = removal_queue.pop()
+            print(f"Queue Size: {len(removal_queue)}, Trying Cell: {cell}")
+            copied_board.remove(cell)
+            current_str = ""
+            for atom in copied_board:
+                current_str += atom
+            solved_cells = len(copied_board)
+            computed_cells = current_str
+            derivable = True
+            # Derive cells using human strategies until failure
+            while derivable:
+                ctl = clingo.Control(["-t 8", "--stats"])
+                ctl.add("base", [], computed_cells)
+                ctl.ground([("base",[])])
+                ctl.add("base", ["n"], self.h_strats)
+                ctl.ground([("base",[self.size])])
+                with ctl.solve(yield_=True) as handle:
+                    for model in handle:
+                        sym_seq = model.symbols(shown=True)
+                        if len(sym_seq) == 0:
+                            derivable = False
+                        for atom in sym_seq:
+                            solved_cells += 1
+                            computed_cells += str(atom).replace("derivable", "fillomino") + "."
+            if solved_cells == self.board_size:
+                print(f"{self.step}: Removed Cell: {cell}")
+                self.step += 1
+                self.current_program_str = current_str
+                self.current_program_list = copied_board
+            else: 
+                print(f"Failed to remove {cell}")
+                copied_board.append(cell) 
         return self.current_program_list
     
     
