@@ -35,6 +35,9 @@ ID1 = ID2 :- adjacent(R1,C1,R2,C2), fillomino(R1,C1,N), region(R1,C1,ID1), fillo
 %used_regions(N) :-  N = #count{ID : region(_,_,ID)}.
 %
 
+%N = k:- N = #count{R,C : fillomino(R,C,k)}. 
+% there is only one region of maximal size
+
 #show fillomino/3.
 % #show used_regions/1.
 

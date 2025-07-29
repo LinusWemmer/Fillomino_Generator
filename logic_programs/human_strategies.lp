@@ -56,9 +56,8 @@ expandable_count(R1,C1,S) :- S = #count{R2,C2 : expandable_candidate(R2,C2,N), a
 % How many cells a region can be expanded to.
 
 % ENTER REGION:
-fillable_region(R,C,R1,C1) :- empty_region(R,C,R1,C1), expandable_candidate(R1,C1,_).
-fillable_region(R,C) :- fillable_region(R,C,_,_).
-derivable(R,C,N) :- empty_region_size(R,C,N), not fillable_region(R,C).
+potential_expansion(R,C) :- empty_region(R,C,R1,C1), expandable_candidate(R1,C1,_).
+derivable(R,C,N) :- empty_region_size(R,C,N), not potential_expansion(R,C).
 % comment: if the puzzle has a unique solution, there should be no way to enter smaller regions than the derived region, as this would contradict uniqueness,
 % e.g. when entering a region of size 3, entering a region of size 2 and size 1 instead. This should expand to human solutions in any case where we have to enter an entire region
 % (the uniqueness should be given by construction)
@@ -67,5 +66,3 @@ derivable(R1,C1,N) :- expandable_candidate(R1,C1,N), adjacent(R1,C1,R2,C2), expa
 % We can derive a cell if it is the only place a neighboring region can expand to
 
 #show derivable/3. 
-%#show blocked/3.
-%#show expandable_count/3.

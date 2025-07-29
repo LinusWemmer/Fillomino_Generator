@@ -22,13 +22,17 @@ class Fillomino_Generator:
         self.h_strats = h_strats.read()
         h_strats.close()
 
-        h_max = open("logic_programs/max_human_strategies_choice.lp")
+        h_max = open("logic_programs/max_human_strategies_choice.lp", "r")
         self.h_max = h_max.read()
         h_max.close()
 
-        h_min = open("logic_programs/min_human_strategies_choice.lp")
+        h_min = open("logic_programs/min_human_strategies_choice.lp", "r")
         self.h_min = h_min.read()
         h_min.close()
+
+        h_unique = open("logic_programs/human_strategies_non_unique.lp", "r")
+        self.h_unique = h_unique.read()
+        h_unique.close()
 
         # Number of steps taking in generating the puzzle
         self.step = 0
@@ -204,7 +208,7 @@ class Fillomino_Generator:
                 ctl = clingo.Control(["-t 8", "--stats"])
                 ctl.add("base", [], computed_cells)
                 ctl.ground([("base",[])])
-                ctl.add("base", ["n"], self.h_strats)
+                ctl.add("base", ["n"], self.h_unique)
                 ctl.ground([("base",[self.size])])
                 with ctl.solve(yield_=True) as handle:
                     for model in handle:
@@ -222,6 +226,7 @@ class Fillomino_Generator:
             else: 
                 print(f"Failed to remove {cell}")
                 copied_board.append(cell) 
+        print(self.current_program_str)
         return self.current_program_list
     
     
