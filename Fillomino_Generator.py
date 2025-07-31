@@ -1,7 +1,9 @@
 import clingo 
 import copy
 import random
-
+import queue
+import re
+import math
 
 class Fillomino_Generator:
     def __init__(self, size:int, largest_region:int, max_regions:int):
@@ -33,9 +35,6 @@ class Fillomino_Generator:
         h_unique = open("logic_programs/human_strategies_non_unique.lp", "r")
         self.h_unique = h_unique.read()
         h_unique.close()
-
-        # Number of steps taking in generating the puzzle
-        self.step = 0
 
         # Solution of generated Puzzle (model & as string)
         self.solution_program_str = ""
@@ -113,6 +112,52 @@ class Fillomino_Generator:
         print(self.current_program_str)                       
         return self.current_program_list
     
+    def generate_puzzle_naive_weighted(self):
+        step = 1
+        removal_queue = queue.PriorityQueue()
+        for item in self.current_program_list:
+            cell_number = [int(x) for x in re.findall(r'\d+', item)][2]
+            weight = random.uniform(0, 1) / (1 + math.log10(cell_number))
+            removal_queue.put((weight,item))
+        copied_board = copy.deepcopy(self.current_program_list.copy())
+        while not removal_queue.empty():
+            cell = removal_queue.get()[1]
+            print(f"Queue Size: {removal_queue.qsize()}, Trying Cell: {cell}")
+            copied_board.remove(cell)
+            current_str = ""
+            for atom in copied_board:
+                current_str += atom
+            ctl = clingo.Control(arguments=["-t 8", "--stats", "2"])
+            ctl.add("base", [], current_str)
+            ctl.ground([("base",[])])
+            ctl.add("base", ["n", "k"], self.solver)
+            ctl.ground([("base",[self.size, self.largest_region])])
+            unique = True
+            with ctl.solve(yield_=True) as hnd:
+                results = 0
+                while unique:
+                    hnd.resume()
+                    results += 1
+                    _ = hnd.wait()
+                    m = hnd.model()
+                    if m is None:
+                        break
+                    if results > 1:
+                        unique = False
+                        break
+            if unique:
+                print(f"{step}: Removed Cell: {cell}")
+                step += 1
+                self.current_program_str = current_str
+                self.current_program_list = copied_board
+            else: 
+                print(f"Failed to remove {cell}.")
+                copied_board.append(cell)  
+        print(self.current_program_str)                       
+        return self.current_program_list
+    
+
+    # Starts with a puzzle with a unique solution and tries to fill until no formalized rules can be used
     def get_human_solvable_puzzle(self, options="max"):
         computed_cells = self.current_program_str
         derived_cells = ""
@@ -172,24 +217,9 @@ class Fillomino_Generator:
         print("Done.")
         return self.current_program_list
     
-    
-    def store_puzzle(self, model):
-        sym_seq =  model.symbols(shown=True)
-        self.current_program_list = []
-        self.current_program_str = ""
-        removed_cells = f"{self.step}: "
-        for atom in sym_seq:
-            if atom.name == "removed":
-                removed_cells += str(([s.number for s in atom.arguments]))
-                self.step += 1
-            elif "blocked" in atom.name:
-                removed_cells +="b"
-            else:
-                self.current_program_str += str(atom).replace("remaining", "fillomino") + ". "
-                self.current_program_list.append(str(atom))
-        self.solution_steps.append(removed_cells)
 
     def generate_puzzle(self):
+        step = 1
         removal_queue = copy.deepcopy(self.current_program_list.copy())
         copied_board = copy.deepcopy(self.current_program_list.copy())
         random.shuffle(removal_queue)
@@ -219,8 +249,52 @@ class Fillomino_Generator:
                             solved_cells += 1
                             computed_cells += str(atom).replace("derivable", "fillomino") + "."
             if solved_cells == self.board_size:
-                print(f"{self.step}: Removed Cell: {cell}")
-                self.step += 1
+                print(f"{step}: Removed Cell: {cell}")
+                step += 1
+                self.current_program_str = current_str
+                self.current_program_list = copied_board
+            else: 
+                print(f"Failed to remove {cell}")
+                copied_board.append(cell) 
+        print(self.current_program_str)
+        return self.current_program_list
+    
+    def generate_puzzle_weighted(self):
+        step = 1
+        removal_queue = queue.PriorityQueue()
+        for item in self.current_program_list:
+            cell_number = [int(x) for x in re.findall(r'\d+', item)][2]
+            weight = random.uniform(0, 1) / (1 + math.log10(cell_number))
+            removal_queue.put((weight,item))
+        copied_board = copy.deepcopy(self.current_program_list.copy())
+        while not removal_queue.empty():
+            cell = removal_queue.get()[1]
+            print(f"Queue Size: {removal_queue.qsize()}, Trying Cell: {cell}")
+            copied_board.remove(cell)
+            current_str = ""
+            for atom in copied_board:
+                current_str += atom
+            solved_cells = len(copied_board)
+            computed_cells = current_str
+            derivable = True
+            # Derive cells using human strategies until failure
+            while derivable:
+                ctl = clingo.Control(["-t 8", "--stats"])
+                ctl.add("base", [], computed_cells)
+                ctl.ground([("base",[])])
+                ctl.add("base", ["n"], self.h_unique)
+                ctl.ground([("base",[self.size])])
+                with ctl.solve(yield_=True) as handle:
+                    for model in handle:
+                        sym_seq = model.symbols(shown=True)
+                        if len(sym_seq) == 0:
+                            derivable = False
+                        for atom in sym_seq:
+                            solved_cells += 1
+                            computed_cells += str(atom).replace("derivable", "fillomino") + "."
+            if solved_cells == self.board_size:
+                print(f"{step}: Removed Cell: {cell}")
+                step += 1
                 self.current_program_str = current_str
                 self.current_program_list = copied_board
             else: 
