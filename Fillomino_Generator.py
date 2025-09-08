@@ -158,6 +158,7 @@ class Fillomino_Generator:
     
 
     # Starts with a puzzle with a unique solution and tries to fill until no formalized rules can be used
+    # Starts with solved stated, remove until no longer unique wiht rules
     def get_human_solvable_puzzle(self, options="max"):
         computed_cells = self.current_program_str
         derived_cells = ""

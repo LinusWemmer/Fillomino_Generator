@@ -8,13 +8,13 @@ region(R,C1,R,C2) :- fillomino(R,C1,N), fillomino(R,C2,N), C2 = C1+1.
 % achieved: neighboring cells with the same number are region.
 
 region(R,C,R,C) :- cell(R,C).
-% achieved: regionness is reflexive 
+% achieved: region is reflexive 
 
 region(R1,C1,R2,C2) :- region(R2,C2,R1,C1).
-% achieved: regionness is symmetric
+% achieved: region is symmetric
 
 region(R1,C1,R2,C2) :- region(R1,C1,R3,C3), region(R3,C3,R2,C2).
-% achieved: regionness is transitive
+% achieved: region is transitive
 
 region_size(R1,C1,N) :- N = #count{R2,C2 : region(R1,C1,R2,C2)}, cell(R1,C1).
 
