@@ -25,7 +25,8 @@ def print_fillomino(gen_model, size: int):
 if __name__ == "__main__":
     print("Generate Fillominos with ASP...\n")
     size = input("Size: ")
-    largest_region = input("Maximum Region: ")
+    largest_region = input("Largest Region: ")
+    max_regions = input("Maximum region number (Warning: scales horribly, recommended 25): ")
     # For quicker testing for now:
     if size == "":
         size = 5
@@ -37,7 +38,7 @@ if __name__ == "__main__":
     gen = Fillomino_Generator(int(size), int(largest_region), max_regions)
     gen_model_str = gen.generate_fillomino()
     print_fillomino(gen_model_str, size)
-    puzzle = print_fillomino(gen.generate_puzzle_naive(), int(size))
+    puzzle = print_fillomino(gen.generate_puzzle_weighted(), int(size))
     result = subprocess.run(['node', 'puzzle.js', json.dumps(puzzle)], capture_output=True, text=True)
     print(result.stdout)
     print(f"Total Computation Time:{time.time()-start_time}")

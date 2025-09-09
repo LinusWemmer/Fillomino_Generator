@@ -54,7 +54,7 @@ different(R1,C1,R2,C2) :- cell(R1,C1), cell(R2,C2), C1 != C2.
 
     max_expansion(R,C,S,N) :- expandable_candidate(R,C,N), adjacent(R,C,R1,C1), S= #count{R2,C2 : max_expandable_region(R1,C1,R2,C2,R,C,N)}, fillomino(R1,C1,N).
 
-    derivable(R,C,N) :- max_expansion(R,C,S,N), S<N.
+    derivable(R,C,N) :- max_expansion(R,C,S,N), S < N.
 
     expandable_count(R1,C1,S) :- S = #count{R2,C2 : expandable_candidate(R2,C2,N), adjacent(R2,C2,R3,C3), region(R1,C1,R3,C3)}, unfinished_region(R1,C1,N).
     % How many cells a region can be expanded to.
@@ -72,7 +72,7 @@ different(R1,C1,R2,C2) :- cell(R1,C1), cell(R2,C2), C1 != C2.
     empty_region(R1,C1,R2,C2), empty_region(R1,C1,R3,C3), empty_region_size(R1,C1,3), different(R1,C1,R2,C2), different(R1,C1,R3,C3), different(R2,C2,R3,C3).
 
     valid_partition(R1,C1) :- adjacent(R2,C2,R3,C3), adjacent(R3,C3,R4,C4), not blocked(R2,C2,3), not blocked(R3,C3,3), not blocked(R4,C4,3), not blocked(R1,C1,1), 
-    empty_region(R1,C1,R2,C2), empty_region(R1,C1,R3,C3),empty_region(R1,C1,R4,C4), empty_region_size(R1,C1,4),
+    empty_region(R1,C1,R2,C2), empty_region(R1,C1,R3,C3), empty_region(R1,C1,R4,C4), empty_region_size(R1,C1,4),
     different(R1,C1,R2,C2), different(R1,C1,R3,C3), different(R1,C1,R4,C4), different(R2,C2,R3,C3), different(R2,C2,R4,C4),different(R3,C3,R4,C4).
 
     partionable(R,C) :- valid_partition(R1,C1), empty_region(R,C,R1,C1).
@@ -80,5 +80,6 @@ different(R1,C1,R2,C2) :- cell(R1,C1), cell(R2,C2), C1 != C2.
     derivable(R,C,3) :- empty_region_size(R,C,3), not potential_expansion(R,C), not partionable(R,C).
     derivable(R,C,4) :- empty_region_size(R,C,4), not potential_expansion(R,C), not partionable(R,C).
 
+N1 = N2 :- derivable(R,C,N1), derivable(R,C,N2).
 
 #show derivable/3. 

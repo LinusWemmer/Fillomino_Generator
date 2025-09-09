@@ -301,7 +301,6 @@ class Fillomino_Generator:
             else: 
                 print(f"Failed to remove {cell}")
                 copied_board.append(cell) 
-        print(self.current_program_str)
         return self.current_program_list
     
     
